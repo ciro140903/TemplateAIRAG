@@ -1,0 +1,46 @@
+apiVersion: 1
+
+datasources:
+  # Loki per i log
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: prometheus
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+
+  # MongoDB Metrics (se configurato con Prometheus exporter)
+  - name: MongoDB
+    type: prometheus
+    access: proxy
+    url: http://mongodb-exporter:9216
+    isDefault: false
+    editable: true
+    jsonData:
+      timeInterval: "5s"
+
+  # Application Metrics
+  - name: Application Metrics
+    type: prometheus
+    access: proxy
+    url: http://app-metrics:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+
+  # TestData DB for demos/testing
+  - name: TestData DB
+    type: testdata
+    access: proxy
+    isDefault: false
+    editable: true 

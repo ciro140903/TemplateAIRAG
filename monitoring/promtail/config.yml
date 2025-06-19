@@ -1,0 +1,96 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Applicazione logs
+  - job_name: portal_app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: portal_app
+          __path__: /var/log/*.log
+
+  # Container logs via Docker
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: containerlogs
+          __path__: /var/lib/docker/containers/*/*log
+    pipeline_stages:
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            attrs:
+      - json:
+          expressions:
+            tag:
+          source: attrs
+      - regex:
+          expression: (?P<container_name>(?:[^|]*))\|
+          source: tag
+      - timestamp:
+          format: RFC3339Nano
+          source: time
+      - labels:
+          stream:
+          container_name:
+      - output:
+          source: output
+
+  # System logs
+  - job_name: syslog
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: syslog
+          __path__: /host/var/log/syslog
+
+  # MongoDB logs
+  - job_name: mongodb
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: mongodb
+          __path__: /var/log/mongodb/*.log
+
+  # Nginx logs
+  - job_name: nginx
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<timestamp>[^\]]*)\] "(?P<method>[^ ]*) (?P<path>[^ ]*) (?P<protocol>[^ ]*)" (?P<status>[\d]+) (?P<bytes_sent>[\d]+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"'
+      - labels:
+          method:
+          path:
+          status:
+      - timestamp:
+          format: 02/Jan/2006:15:04:05 -0700
+          source: timestamp
+
+  # Application error logs
+  - job_name: portal_errors
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: portal_errors
+          level: error
+          __path__: /var/log/error*.log 

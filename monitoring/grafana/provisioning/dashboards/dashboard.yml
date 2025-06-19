@@ -1,0 +1,35 @@
+apiVersion: 1
+
+providers:
+  # Dashboard provider per il portale
+  - name: 'portal-dashboards'
+    orgId: 1
+    folder: 'Portal'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/portal
+
+  # Dashboard provider per l'infrastruttura
+  - name: 'infrastructure-dashboards'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/infrastructure
+
+  # Dashboard provider per l'AI e RAG
+  - name: 'ai-rag-dashboards'
+    orgId: 1
+    folder: 'AI & RAG'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/ai-rag 
