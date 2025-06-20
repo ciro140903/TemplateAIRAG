@@ -1,46 +1,185 @@
-# Getting Started with Create React App
+# Frontend - Portale Aziendale
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend moderno costruito con React 18, TypeScript, Tailwind CSS e tecnologie all'avanguardia.
 
-## Available Scripts
+## 🚀 Tecnologie Utilizzate
 
-In the project directory, you can run:
+- **React 18** - Libreria UI moderna con Concurrent Features
+- **TypeScript** - Type safety e developer experience superiore
+- **Tailwind CSS** - Framework CSS utility-first
+- **Framer Motion** - Animazioni fluide e moderne
+- **Zustand** - State management leggero e performante
+- **React Router** - Routing client-side
+- **React Hook Form** - Gestione form performante
+- **Zod** - Validazione schema TypeScript-first
+- **React Query** - Data fetching e caching intelligente
+- **Lucide React** - Icone moderne e consistenti
+- **Radix UI** - Componenti UI accessibili
+- **Vite** - Build tool veloce e moderno
 
-### `npm start`
+## 📦 Struttura Progetto
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```
+src/
+├── components/          # Componenti riutilizzabili
+│   ├── ui/             # Componenti UI base (Button, Input, etc.)
+│   ├── auth/           # Componenti di autenticazione
+│   ├── layout/         # Componenti di layout (Header, Sidebar)
+│   └── routes/         # Routing e protezione routes
+├── pages/              # Pagine dell'applicazione
+├── store/              # State management (Zustand stores)
+├── services/           # API services e HTTP client
+├── types/              # Definizioni TypeScript
+├── lib/                # Utilities e configurazioni
+└── hooks/              # Custom React hooks
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🛠️ Setup e Installazione
 
-### `npm test`
+1. **Assicurati di avere Node.js 18+ installato**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. **Installa le dipendenze:**
+   ```bash
+   npm install
+   ```
 
-### `npm run build`
+3. **Configura le variabili d'ambiente:**
+   ```bash
+   cp .env.example .env
+   ```
+   Modifica `.env` con le configurazioni appropriate.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. **Avvia il server di sviluppo:**
+   ```bash
+   npm run dev
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+5. **Apri il browser su:** http://localhost:3000
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🔧 Script Disponibili
 
-### `npm run eject`
+- `npm run dev` - Avvia il server di sviluppo
+- `npm run build` - Build di produzione
+- `npm run preview` - Preview del build
+- `npm run lint` - Controllo linting
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 🎨 Design System
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Il progetto utilizza un design system coerente basato su:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- **Colori:** Palette personalizzata con supporto dark/light mode
+- **Typography:** Scale tipografica consistente
+- **Spacing:** Sistema di spaziatura modulare
+- **Componenti:** Libreria di componenti riutilizzabili
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Componenti UI Principali
 
-## Learn More
+- **Button** - Pulsanti con varianti multiple
+- **Input** - Campi di input con validazione
+- **Card** - Container per contenuti
+- **Label** - Etichette per form
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🔐 Autenticazione
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Il sistema di autenticazione include:
+
+- Login/Logout sicuro
+- Gestione token JWT
+- Protezione routes basata su ruoli
+- Persistenza sessione
+- Refresh token automatico
+
+### Ruoli Utente
+
+- **Admin** - Accesso completo al sistema
+- **User** - Accesso standard alle funzionalità
+- **Viewer** - Accesso in sola lettura
+
+## 🎯 Funzionalità Principali
+
+### ✅ Implementate
+
+- [x] Sistema di autenticazione completo
+- [x] Dashboard con statistiche
+- [x] Layout responsive
+- [x] Gestione tema (light/dark)
+- [x] Routing protetto
+- [x] State management globale
+- [x] API client configurato
+
+### 🚧 In Sviluppo
+
+- [ ] Chat AI interface
+- [ ] Sistema di upload documenti
+- [ ] Pannello amministrativo
+- [ ] Analytics dashboard
+- [ ] Sistema notifiche
+
+## 🌐 API Integration
+
+Il frontend comunica con il backend tramite:
+
+- **Base URL:** Configurabile via env vars
+- **Authentication:** Bearer token
+- **Error Handling:** Interceptor automatici
+- **Type Safety:** Tipizzazione completa responses
+
+## 📱 Responsive Design
+
+L'applicazione è completamente responsive:
+
+- **Mobile First** - Design ottimizzato per mobile
+- **Breakpoints:** Tailwind CSS responsive system
+- **Touch Friendly** - Interfaccia ottimizzata touch
+- **PWA Ready** - Pronto per Progressive Web App
+
+## 🎨 Theming
+
+Supporto completo per temi:
+
+- **Light Mode** - Tema chiaro default
+- **Dark Mode** - Tema scuro
+- **System** - Segue le preferenze sistema
+- **Personalizzazione** - Variabili CSS custom
+
+## 🧪 Best Practices
+
+Il progetto segue le best practices moderne:
+
+- **TypeScript Strict** - Type safety massima
+- **Component Composition** - Architettura modulare
+- **Performance** - Lazy loading e code splitting
+- **Accessibility** - ARIA labels e keyboard navigation
+- **SEO** - Meta tags e structured data
+
+## 📊 Performance
+
+Ottimizzazioni implementate:
+
+- **Bundle Splitting** - Codice diviso per chunk
+- **Tree Shaking** - Rimozione codice non utilizzato
+- **Image Optimization** - Lazy loading immagini
+- **Caching** - React Query per cache intelligente
+
+## 🤝 Contributing
+
+Per contribuire al progetto:
+
+1. Fork del repository
+2. Crea un branch feature
+3. Implementa le modifiche
+4. Testa localmente
+5. Submit Pull Request
+
+## 📝 Note di Sviluppo
+
+- Utilizza **ESLint** per il linting
+- Segui le convenzioni **TypeScript**
+- Testa su multiple viewport
+- Verifica accessibilità
+- Documenta modifiche significative
+
+---
+
+**Versione:** 1.0.0  
+**Ultimo aggiornamento:** Gennaio 2025

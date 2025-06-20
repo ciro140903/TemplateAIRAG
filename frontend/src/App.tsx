@@ -1,25 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider, initializeIcons } from '@fluentui/react';
+import { AppRoutes } from '@/components/routes/app-routes';
+import { useUIStore } from '@/store/ui-store';
+import { lightTheme, darkTheme } from '@/lib/fluent-theme';
+
+// Inizializza le icone Fluent UI
+initializeIcons();
+
+// Crea l'istanza del QueryClient per React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
+  const { theme } = useUIStore();
+  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider theme={currentTheme}>
+          <div style={{ height: '100vh' }}>
+            <AppRoutes />
+          </div>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
