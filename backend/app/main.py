@@ -21,9 +21,16 @@ from app.core import (
     setup_logging,
     log_api_call
 )
+from app.core.advanced_logging import (
+    setup_structured_logging,
+    log_startup_info,
+    log_shutdown_info,
+    PerformanceTracker
+)
+from app.core.database_init import initialize_database
 
-# Setup logging prima di tutto
-setup_logging()
+# Setup logging strutturato prima di tutto
+setup_structured_logging()
 logger = structlog.get_logger(__name__)
 
 
@@ -31,18 +38,39 @@ logger = structlog.get_logger(__name__)
 async def lifespan(app: FastAPI):
     """Gestisce startup e shutdown dell'applicazione"""
     # Startup
-    logger.info("🚀 Avvio Portale Aziendale Backend", version=settings.app_version)
+    await log_startup_info()
     
     try:
         # Connessione ai database
-        await connect_databases()
+        with PerformanceTracker("database_connection"):
+            await connect_databases()
+        
+        # Inizializzazione database (indici, admin, config)
+        if settings.auto_initialize_db:
+            with PerformanceTracker("database_initialization"):
+                from app.core.database import get_database
+                db = await get_database()
+                init_results = await initialize_database(db)
+                
+                logger.info(
+                    "Database inizializzato",
+                    indexes_created=len([k for k, v in init_results["indexes"].items() if v]),
+                    admin_created=init_results["admin_created"],
+                    configs_created=len([k for k, v in init_results["configs"].items() if v])
+                )
         
         # Log configurazione
         logger.info(
             "✅ Applicazione inizializzata con successo",
             environment=settings.environment,
             debug=settings.debug,
-            cors_origins=settings.cors_origins
+            cors_origins=settings.cors_origins,
+            features={
+                "ai_chat": settings.ai_chat_enabled,
+                "rag": settings.rag_enabled,
+                "mfa": settings.mfa_enabled,
+                "registration": settings.registration_enabled
+            }
         )
         
         yield
@@ -52,7 +80,7 @@ async def lifespan(app: FastAPI):
         raise
     finally:
         # Shutdown
-        logger.info("🛑 Arresto Portale Aziendale Backend")
+        await log_shutdown_info()
         await disconnect_databases()
         logger.info("✅ Applicazione arrestata correttamente")
 
@@ -301,7 +329,16 @@ async def app_info():
 
 # Import e registrazione router API
 from app.api.v1 import auth_routes
+from app.api.v1 import users
+from app.api.v1 import chat
+from app.api.v1 import admin
+from app.api.v1 import health
+
 app.include_router(auth_routes.router, prefix=settings.api_prefix + "/auth", tags=["Authentication"])
+app.include_router(users.router, prefix=settings.api_prefix + "/users", tags=["Users"])
+app.include_router(chat.router, prefix=settings.api_prefix + "/chat", tags=["Chat"])
+app.include_router(admin.router, prefix=settings.api_prefix + "/admin", tags=["Administration"])
+app.include_router(health.router, prefix="/health", tags=["Health"])
 
 
 # ===== AVVIO APPLICAZIONE =====

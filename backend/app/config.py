@@ -186,6 +186,7 @@ class Settings(BaseSettings):
     file_upload_enabled: bool = True
     ai_chat_enabled: bool = True
     rag_enabled: bool = True
+    auto_initialize_db: bool = True
 
 
 # Istanza globale delle impostazioni

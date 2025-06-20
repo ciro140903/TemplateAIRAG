@@ -19,7 +19,9 @@ from app.core import (
     verify_token,
     log_security_event
 )
-from app.models.user import UserLogin, UserResponse, user_helper
+from app.models.user import UserLogin, UserResponse, UserCreate, user_helper
+from pydantic import BaseModel
+from app.services import AuthService
 
 # Logger
 logger = structlog.get_logger(__name__)
@@ -29,6 +31,11 @@ router = APIRouter()
 
 # Security scheme
 security = HTTPBearer(auto_error=False)
+
+
+class MFARequest(BaseModel):
+    """Modello per richieste MFA"""
+    totp_code: str
 
 
 # Dependency per ottenere l'utente corrente
@@ -339,6 +346,178 @@ async def get_current_user_info(
         return UserResponse(**user_helper(current_user))
     except Exception as e:
         logger.error("Errore recupero informazioni utente", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Errore interno del server"
+        )
+
+
+@router.post("/register")
+async def register(
+    user_data: UserCreate,
+    request: Request,
+    mongodb = Depends(get_mongodb)
+):
+    """Registra un nuovo utente"""
+    
+    # Verifica se la registrazione è abilitata
+    if not settings.registration_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Registrazione non abilitata"
+        )
+    
+    try:
+        # Crea servizio auth
+        auth_service = AuthService(mongodb)
+        
+        # Crea utente
+        user, error = await auth_service.create_user(
+            user_data=user_data,
+            ip_address=request.client.host if request.client else None
+        )
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error
+            )
+        
+        # Genera tokens per login automatico
+        tokens = await auth_service.generate_tokens(user, remember_me=False)
+        
+        logger.info(
+            "Utente registrato",
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email
+        )
+        
+        return tokens
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Errore durante registrazione", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Errore interno del server"
+        )
+
+
+@router.post("/mfa/setup")
+async def setup_mfa(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    mongodb = Depends(get_mongodb)
+):
+    """Configura MFA per l'utente corrente"""
+    
+    try:
+        # Crea servizio auth
+        auth_service = AuthService(mongodb)
+        
+        # Setup MFA
+        secret, qr_code, error = await auth_service.setup_mfa(
+            user_id=current_user["_id"],
+            ip_address=request.client.host if request.client else None
+        )
+        
+        if not secret:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error
+            )
+        
+        return {
+            "secret": secret,
+            "qr_code": qr_code,
+            "message": "MFA configurato. Usa il QR code per configurare la tua app authenticator."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Errore setup MFA", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Errore interno del server"
+        )
+
+
+@router.post("/mfa/enable")
+async def enable_mfa(
+    mfa_request: MFARequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    mongodb = Depends(get_mongodb)
+):
+    """Abilita MFA dopo verifica codice TOTP"""
+    
+    try:
+        # Crea servizio auth
+        auth_service = AuthService(mongodb)
+        
+        # Abilita MFA
+        success, backup_codes, error = await auth_service.enable_mfa(
+            user_id=current_user["_id"],
+            totp_code=mfa_request.totp_code,
+            ip_address=request.client.host if request.client else None
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error
+            )
+        
+        return {
+            "message": "MFA abilitato con successo",
+            "backup_codes": backup_codes
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Errore abilitazione MFA", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Errore interno del server"
+        )
+
+
+@router.post("/mfa/disable")
+async def disable_mfa(
+    mfa_request: MFARequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    mongodb = Depends(get_mongodb)
+):
+    """Disabilita MFA dopo verifica codice TOTP"""
+    
+    try:
+        # Crea servizio auth
+        auth_service = AuthService(mongodb)
+        
+        # Disabilita MFA
+        success, error = await auth_service.disable_mfa(
+            user_id=current_user["_id"],
+            totp_code=mfa_request.totp_code,
+            ip_address=request.client.host if request.client else None
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error
+            )
+        
+        return {"message": "MFA disabilitato con successo"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Errore disabilitazione MFA", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Errore interno del server"
